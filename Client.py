@@ -43,12 +43,18 @@ class ClientWidget(QtGui.QWidget) :
 		
 		self.setLayout(self.mainHLayout)
 		
+		self.bottomPushButton.clicked.connect(self.clickTest)
+		
 		self.show()
 		pass
+		
+	@QtCore.Slot()
+	def clickTest(self) :
+		print("click")
 	
 	def keyPressEvent(self, event) :
 		print(event.text())
-		if event.key() == "\n" :
+		if event.key() == QtCore.Qt.Key_Enter :
 			self.bottomPushButton.click()
 		
 
