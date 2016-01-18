@@ -7,17 +7,29 @@ import sys
 
 from mainWindow import mainWindow
 
+class Thread1(QtCore.QThread) :
+	def __init__(self) :
+		super(Thead1, self).__init__()
+	def run(self) :
+		while True :
+			print(1)
+			
+class Thread2(QtCore.QThread) :
+	def __init__(self) :
+		super(Thead2, self).__init__()
+	def run(self) :
+		while True :
+			print(2)
+
 if __name__ == "__main__" :
 	print("the program is execute!")
 	app = QtGui.QApplication(sys.argv)
 	ui = mainWindow()
-	thread1 = QtCore.QThead()
-	thread2 = QtCore.QThead()
+	
+	t1 = Thread1()
+	t2 = Thread2()
+	
+	t1.start()
+	t2.start()
+	
 	sys.exit(app.exec_())
-	
-	
-def run1() :
-	print("1")
-
-def run2() :
-	print("2")

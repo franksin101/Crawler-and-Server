@@ -14,3 +14,8 @@ class WebView(QtWebKit.QWebView) :
 	def __init__(self):
 		super(WebView, self).__init__()
 		self.setPage(WebPage())
+	
+	@QtCore.Slot(bool)
+	def loadPageReady(self, isFinished) :
+		if isFinished :
+			pass
