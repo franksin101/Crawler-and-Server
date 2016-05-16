@@ -9,14 +9,14 @@ from mainWindow import mainWindow
 
 class Thread1(QtCore.QThread) :
 	def __init__(self) :
-		super(Thead1, self).__init__()
+		super(Thread1, self).__init__()
 	def run(self) :
 		while True :
 			print(1)
 			
 class Thread2(QtCore.QThread) :
 	def __init__(self) :
-		super(Thead2, self).__init__()
+		super(Thread2, self).__init__()
 	def run(self) :
 		while True :
 			print(2)
@@ -26,10 +26,10 @@ if __name__ == "__main__" :
 	app = QtGui.QApplication(sys.argv)
 	ui = mainWindow()
 	
-	t1 = Thread1()
+	"""t1 = Thread1()
 	t2 = Thread2()
 	
 	t1.start()
-	t2.start()
+	t2.start()"""
 	
 	sys.exit(app.exec_())

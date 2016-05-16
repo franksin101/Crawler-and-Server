@@ -15,11 +15,10 @@ class mainWindow(QtGui.QWidget) :
 		self.height = height
 		self.setGeometry(10, 10, self.width, self.height)
 		self.initial()
+		
 	def initial(self) :
 		self.MainHLayout = QtGui.QHBoxLayout()
 		self.WebView = WebView()
-		
-		self.WebView.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
 		
 		self.WebView.show()
 		
@@ -28,10 +27,14 @@ class mainWindow(QtGui.QWidget) :
 		self.MainHLayout.addWidget(self.WebView)
 		
 		self.WebView.loadFinished.connect(self.loadPageOK)
+		self.WebView.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
 		
 		self.setLayout(self.MainHLayout)
 		
 		self.show()
+		
 	def loadPageOK(self, isFinished) :
 		if isFinished :
+			print("load OK")
 			pass
+			

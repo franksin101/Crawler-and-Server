@@ -14,8 +14,13 @@ class WebView(QtWebKit.QWebView) :
 	def __init__(self):
 		super(WebView, self).__init__()
 		self.setPage(WebPage())
+		self.linkClicked.connect(self.handleLinkClicked)
 	
 	@QtCore.Slot(bool)
 	def loadPageReady(self, isFinished) :
 		if isFinished :
 			pass
+	
+	@QtCore.Slot(QtCore.QUrl)
+	def handleLinkClicked(self, url) :
+		self.load(url)

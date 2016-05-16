@@ -5,6 +5,7 @@ from Web import WebView
 from TabWidget import TabWidget
 
 import sys
+import json
 
 class Connection(QtCore.QObject) :
 	closeConnection = QtCore.Signal()
@@ -12,6 +13,7 @@ class Connection(QtCore.QObject) :
 	def __init__(self, TcpSocket = None) :
 		if TcpSocket == None :
 			raise ValueError
+		self.stop = False
 		self.webview = WebView()
 		self.webview.load("http://127.0.0.1")
 		self.TcpSocket = TcpSocket
@@ -21,43 +23,58 @@ class Connection(QtCore.QObject) :
 	
 	@QtCore.Slot()
 	def forceStop(self) :
+		self.stop = True
 		self.closeConnection.emit(self.webview)
 		self.TcpSocket.abort()
 		self.TcpSocket.deleteLater()
 		# self.webview.deleteLater()
 		self.deleteLater()
 		self.thread().forceStop()
-		
-	@QtCore.Slot(str)	
-	def task(self, cmd) :
-		if cmd["type"] == "loadUrl" :
-			self.webview.load(cmd["url"])
-			data = QtCore.QByteArray()
-			data = "load finished" 
-			self.TcpSocket.write(data)
-			self.TcpSocket.flush()
-			data.deleteLater()
-		elif cmd["type"] == "close" :
-			self.forceStop()
-		else :
-			print("unknow command")
+	
+	@QtCore.Slot()
+	def service(self) :
+		print(self.thread().currentThreadId())
+		while not self.stop :
+			command = self.TcpSocket.read(4096)
+			
+			if command["type"] == "loadUrl" :
+				self.webview.load(cmd["url"])
+				data = QtCore.QByteArray()
+				data = "load finished" 
+				self.TcpSocket.write(data)
+				self.TcpSocket.flush()
+				data.deleteLater()
+			elif cmd["type"] == "close" :
+				self.forceStop()
+			else :
+				print("unknow command")
 		
 class CrossThread(QtCore.QThread) :
+	startedSignal = QtCore.Signal()
 	finishedSignal = QtCore.Signal(str)
 	
 	def __init__(self) :
 		super(CrossThread, self).__init__()
+		self.id = self.currentThreadId()
 		self.finished.connect(self.deleteLater)
 		self.finished.connect(self.finishedWithThreadID)
 		self.finished.connect(self.finishedWithThreadIDHandler)
+		self.startedSignal.connect(self.startedHandler)
 		pass
 	def run(self) :
+		self.startedSignal.emit()
 		self.exit(self.exec_())
+	
+	# the start handler it 
+	@QtCore.Slot()
+	def startedHandler(self) :
+		print(self.id + " is start !!")
+		pass
 	
 	# when this thread finished it will emit a finished signal with id
 	@QtCore.Slot()
 	def finishedWithThreadID(self) :
-		self.finishedSignal.emit(str(self.currentThreadId()))
+		self.finishedSignal.emit(str(self.id))
 	
 	@QtCore.Slot(str)	
 	def finishedWithThreadIDHandler(self, threadID) :
@@ -76,11 +93,11 @@ class MoniterObject :
 		self.Connection = Connection
 
 class MoniterThread(QtCore.QThread) :
-	startSignal = QtCore.Signal()
+	startedSignal = QtCore.Signal()
+	
 	def __init__(self) :
 		super(MoniterThread, self).__init__()
 		self.threadTable = dict()
-		self.stop = False
 		self.finished.connect(self.deleteLater)
 		pass
 		
@@ -106,7 +123,6 @@ class MoniterThread(QtCore.QThread) :
 	# force cancel all connection, then destory itself
 	@QtCore.Slot()
 	def deleteAll(self) :
-		self.stop = True
 		for thread_connection in self.threadTable :
 			thread_connection.Connection.forceStop()
 		self.quit()
@@ -114,7 +130,6 @@ class MoniterThread(QtCore.QThread) :
 	# check and wait all connection finished, then destory itself
 	@QtCore.Slot()
 	def waitForAllThread(self) :
-		self.stop = True
 		isAllFinished = True
 		while True :
 			for thread in self.threadTable :
@@ -163,7 +178,8 @@ class Server(QtNetwork.QTcpServer) :
 		crossThread = CrossThread() # create connection thread
 		self.widget.addTab(str(crossThread.currentThreadId()), connection.widget()) # insert connection attach widget to server main widget
 		connection.closeConnection.connect(self.widget.deleteTab) # connect connection close to remove widget of server main widget
-		crossThread.finishedSignal.connect(self.monitor.deleteThread)
+		crossThread.finishedSignal.connect(self.monitor.deleteThread) # when a thread dead or finish its job, it will tell monitor to delete it.
+		crossThread.startedSignal.connect(connection.service) # inform new connection thread start service.
 		connection.moveToThread(crossThread) # let connection run in new thread 
 		moniterObject = MoniterObject(crossThread, connection) # create a monitor object for monitor thread
 		self.addNewThread.emit(moniterObject) # make monitor thread registe a new monitor object
