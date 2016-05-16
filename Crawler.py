@@ -14,7 +14,16 @@ class Crawler(QtGui.QWidget):
 		self.executeCrawler = QtGui.QPushButton()
 		self.myWebView = WebView()
 		self.myTabWidget = TabWidget()
+		
+		self.mainHBoxLayout.addWidget(self.myTabWidget)
+		self.mainVBoxLayout.addWidget(self.executeCrawler)
+		
+		self.mainHBoxLayout.addLayout(self.mainVBoxLayout)
+		self.setLayout(self.mainHBoxLayout)
+		
+		self.show()
 		pass
 	
 if __name__ == "__main__" :
+	
 	print("Hello World")
